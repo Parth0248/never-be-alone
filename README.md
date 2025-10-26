@@ -1,4 +1,4 @@
-# Never Be Alone 🎧
+# UniCon 👀
 
 > **An Intelligent Multimodal AI Companion System**
 
@@ -8,7 +8,7 @@ Built at **Cal Hacks 2025** - October 25-26, 2025
 
 ## Overview
 
-Never Be Alone is a comprehensive AI-powered companion system that integrates with Omi wearable devices (DevKit 2 and Glass) to provide seamless audio transcription, universal memory storage, and intelligent agentic interactions.
+UniCon is a comprehensive AI-powered companion system that integrates with Omi wearable devices (DevKit 2 and Glass) to provide seamless audio transcription, universal memory storage, and intelligent agentic interactions.
 
 ## Features
 
