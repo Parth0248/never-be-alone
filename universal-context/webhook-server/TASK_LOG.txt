@@ -1,0 +1,128 @@
+WEBHOOK-SERVER PROJECT TASK LOG
+================================
+
+Date: 2025-10-25
+Environment: Windows PowerShell
+Python Virtual Environment: .venv
+
+PROJECT GOAL:
+Simplify webhook-server by removing Cloudflare Workers layer and implementing
+a direct Python-based audio streaming server that receives audio bytes from Omi
+device and saves them as WAV files in Google Cloud Storage.
+
+REFERENCE IMPLEMENTATION:
+- Repository: https://github.com/mdmohsin7/omi-audio-streaming
+- Language: Go (we're converting to Python)
+- Documentation: https://docs.omi.me/doc/developer/AudioStreaming
+
+TASKS COMPLETED:
+----------------
+1. [DONE] Explored current webhook-server directory structure
+   - Found Cloudflare Workers TypeScript implementation
+   - Found omi-audio-streaming Go reference implementation already cloned
+
+2. [DONE] Fetched Omi audio streaming documentation
+   - Audio format: PCM 16-bit, 16000 Hz, mono
+   - Endpoint format: POST /audio?sample_rate=16000&uid=user_id
+   - Required env vars: GOOGLE_APPLICATION_CREDENTIALS_JSON, GCS_BUCKET_NAME
+
+3. [DONE] Analyzed omi-audio-streaming implementation
+   - Go server receives audio bytes via POST
+   - Creates WAV header (44 bytes) and prepends to audio data
+   - Uploads resulting WAV file to GCS bucket
+   - File naming: DD_MM_YYYY_HH_MM_SS.wav
+
+4. [DONE] Created this task log file
+
+5. [DONE] Set up GCP project and resources
+   - Created project: calhacks-omi-audio
+   - Linked billing account: Google Cloud Platform Trial Billing Account
+   - Created service account: omi-audio-server@calhacks-omi-audio.iam.gserviceaccount.com
+   - Created GCS bucket: calhacks-omi-audio-files (us-central1)
+   - Generated service account key: gcp-credentials.json
+   - Base64 encoded credentials and added to .dev.vars
+
+6. [DONE] Removed Cloudflare-specific files
+   - wrangler.toml
+   - DEPLOYMENT.md
+   - QUICK_START.md
+   - test-webhooks.sh
+
+7. [DONE] Removed TypeScript implementation
+   - src/ directory
+   - tsconfig.json
+   - package.json
+   - package-lock.json
+   - node_modules/
+
+8. [DONE] Created Python implementation (main.py)
+   - Flask-based web server
+   - WAV header creation function
+   - GCS upload functionality
+   - /audio endpoint for receiving audio bytes
+   - /health endpoint for monitoring
+   - / endpoint for service info
+
+9. [DONE] Created requirements.txt
+   - Flask 3.0.0
+   - google-cloud-storage 2.18.2
+   - gunicorn 22.0.0
+   - Other dependencies
+
+10. [DONE] Created Dockerfile
+    - Multi-stage build
+    - Python 3.12-slim base
+    - Gunicorn production server
+    - Health check included
+
+11. [DONE] Created environment configuration files
+    - .env.example (template)
+    - .dev.vars (with actual credentials)
+    - .gitignore (to protect sensitive files)
+    - Updated root .gitignore
+
+12. [DONE] Updated README.md
+    - Complete Python setup instructions
+    - Windows PowerShell commands
+    - GCP setup details
+    - Multiple deployment options
+    - API reference
+    - Troubleshooting guide
+
+13. [DONE] Fixed environment variable loading
+    - Added python-dotenv to load .dev.vars automatically
+    - Updated main.py to use load_dotenv()
+    - Verified credentials load correctly (3176 chars)
+    - Bucket name loads: calhacks-omi-audio-files
+
+14. [DONE] Created webhook architecture documentation
+    - WEBHOOK_ARCHITECTURE.md explains complete flow
+    - Clarified webhooks vs webhook data storage
+    - Documented Omi → Server → GCS pipeline
+    - Added testing and troubleshooting guides
+
+15. [DONE] Deployed to Google Cloud Run
+    - Built Docker image: gcr.io/calhacks-omi-audio/omi-audio-server
+    - Deployed to region: us-central1
+    - Service URL: https://omi-audio-server-423984362325.us-central1.run.app
+    - Environment variables configured (credentials + bucket name)
+    - Health check passing: {"status":"healthy"}
+    - Root endpoint working with service info
+
+TASKS IN PROGRESS:
+------------------
+None
+
+TASKS PENDING:
+--------------
+1. Configure Omi app with webhook URL
+2. Test end-to-end audio streaming from Omi device
+3. Verify audio files appear in GCS bucket
+4. (Optional) Set up monitoring/logging
+
+IMPORTANT NOTES:
+----------------
+- Always activate .venv before installing packages: .venv\Scripts\Activate.ps1
+- Using Windows PowerShell, not bash
+- Keep omi-audio-streaming folder as reference
+- Use webhook.site for testing webhooks

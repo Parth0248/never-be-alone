@@ -1,0 +1,279 @@
+Include Supermemory mcp:
+
+{
+  "supermemory-mcp": {
+    "command": "npx",
+    "args": ["-y", "mcp-remote", "https://api.supermemory.ai/mcp"],
+    "env": {},
+    "headers": {
+      "Authorization": "Bearer sm_4Cp6vPn9aEkgzfxDeDStga_IjwywIPbAixlusTQLSwNTGeNUmjLUndGgMaTongUJEGPDeskkXDOYjejjAtaZLLl"
+    }
+  }
+}
+
+
+The supermemory-mcp comes with four tools, which include: addMemory, search, getProjects, and whoAmI.
+
+New Supermemory API for Memory Access:
+sm_ABpjkMjHLz4JMAfthSbBph_msXeoCXCOSLKUbvCchQPZFlHrRIezInSzzCTEdSZtEzWgrgJlqmdKmgFvGDzgWLO
+
+
+groq api:
+[REDACTED - Set as GROQ_API_KEY environment variable]
+
+
+ASI:One API Key: sk_8e3c65c863564caf9be1d4fe16ed189339b5d3df61d940c9ab7f162e6f6bb603
+
+Agentverse MCP: https://mcp.agentverse.ai/sse
+
+Agentverse API with full access:
+eyJhbGciOiJSUzI1NiJ9.eyJleHAiOjE3NjQwMjAyMzgsImlhdCI6MTc2MTQyODIzOCwiaXNzIjoiZmV0Y2guYWkiLCJqdGkiOiI1NGMxYTgwMWY1Zjc2ZmIyNmE2MTIyNjYiLCJzY29wZSI6ImF2Iiwic3ViIjoiMDNlMmM2ZDExMzk3ODU3M2JjM2NlMmU5NjE4NjZkNDg0N2U5Yzk2Y2Q0M2Q0ZDdkIn0.mHQE9siKQP83jG4IC2E2hB7RVAfj6nAJlIFJHi1tJwCeMG6YiCyJaJdI-DlpKveWz17QiqGJ9rCdrLRNt5J28P6kAtyVQTEuJGG7AHA_TEtqJ1ZGjgO-hI0HkjfAwqH9K9kacgd2HP_5lcYbhP02Q7sr7cm7AMI22HLv3u3Qiav8mfX6hoVd0Gd6h0-F3jcFoaRDvvhPCECMZX0TvpHBxRxFQ5jfKphHhXsik7qHmWHRv2KUbqaBS8qWy-fgwAg5B1iiBoCsu-1VZq_o0DzPUklJjBhs0845frD6iyoFYaNR-6dTY0yHTr2ULYJc12MzYitX8DVDWhHV_wYeeoEyzg
+
+Reka.ai API: 23ef06698f0d9ae403ac545ab50618560a9c36343c28adbcab6cbd4eef377136
+
+# Multimodal Agentic Memory System - Implementation Plan
+
+## Component Breakdown for Claude Code
+
+### **COMPONENT 1: Omi Webhook Receiver** 
+**Priority: HIGH | Estimated Time: 1-2 hours**
+
+#### Tasks:
+1. Create Express.js webhook endpoint `/api/omi/transcription`
+2. Validate incoming Omi payload structure
+3. Extract transcription text and metadata (timestamp, speaker)
+4. Log received transcriptions for debugging
+5. Forward to Reka.ai processing pipeline
+
+#### Test Criteria:
+- [ ] Endpoint receives POST requests successfully
+- [ ] Parses Omi JSON payload correctly
+- [ ] Returns 200 OK on success
+- [ ] Handles malformed requests gracefully
+
+#### Files to Create:
+- `src/webhooks/omi-receiver.js`
+- `src/config/omi-config.js`
+
+---
+
+### **COMPONENT 2: Reka.ai Integration Layer**
+**Priority: HIGH | Estimated Time: 2-3 hours**
+
+#### Tasks:
+1. Set up Reka.ai API client with authentication
+2. Create function to send transcribed text to Reka
+3. Parse Reka's multimodal response (text + future audio support)
+4. Extract structured intent/context from Reka output
+5. Handle errors and rate limiting
+
+#### Test Criteria:
+- [ ] Successfully authenticates with Reka.ai API
+- [ ] Sends text and receives structured response
+- [ ] Extracts key entities and intent
+- [ ] Handles API errors with retries
+
+#### Files to Create:
+- `src/services/reka-client.js`
+- `src/parsers/reka-response-parser.js`
+- `tests/reka-integration.test.js`
+
+#### API Reference:
+- Reka.ai multimodal capabilities
+- Input: text (+ future: video)
+- Output: structured JSON with intent, entities, context
+
+---
+
+### **COMPONENT 3: ASI:One Orchestration**
+**Priority: HIGH | Estimated Time: 2-3 hours**
+
+#### Tasks:
+1. Set up ASI:One API client
+2. Send Reka's structured output to ASI:One
+3. Receive intent analysis and Agentverse agent recommendations
+4. Execute agent delegation (call selected agents)
+5. Aggregate results from delegated agents
+6. Implement fallback logic if no agents found
+
+#### Test Criteria:
+- [ ] ASI:One correctly analyzes intent
+- [ ] Finds relevant Agentverse agents
+- [ ] Successfully delegates tasks
+- [ ] Handles agent failures gracefully
+- [ ] Falls back to Reka.ai when needed
+
+#### Files to Create:
+- `src/services/asi-one-client.js`
+- `src/orchestration/agent-delegator.js`
+- `src/orchestration/fallback-handler.js`
+
+---
+
+### **COMPONENT 4: Supermemory Integration (Storage)**
+**Priority: HIGH | Estimated Time: 1-2 hours**
+
+#### Tasks:
+1. Connect to Supermemory via existing MCP tools
+2. Design storage schema for processed actions
+3. Store ASI:One's processed context + actions (Option B)
+4. Implement context retrieval for new queries
+5. Add timestamp and session tracking
+
+#### Storage Schema:
+```json
+{
+  "timestamp": "ISO8601",
+  "transcription": "original text from Omi",
+  "reka_context": "visual/audio context interpreted",
+  "asi_intent": "identified user intent",
+  "agent_used": "Agentverse agent name/ID",
+  "action_taken": "what was executed",
+  "result": "outcome of action",
+  "session_id": "unique session identifier"
+}
+```
+
+#### Test Criteria:
+- [ ] Successfully stores to Supermemory
+- [ ] Retrieves relevant context on query
+- [ ] Handles search with semantic matching
+- [ ] Projects properly separated if needed
+
+#### Files to Create:
+- `src/services/supermemory-manager.js`
+- `src/schemas/memory-schema.js`
+
+---
+
+### **COMPONENT 5: Main Orchestration Pipeline**
+**Priority: HIGH | Estimated Time: 1-2 hours**
+
+#### Tasks:
+1. Create main pipeline controller
+2. Chain: Omi → Reka → ASI:One → Supermemory
+3. Add async processing for non-critical paths
+4. Implement error boundaries at each stage
+5. Add logging and monitoring
+
+#### Flow:
+```
+1. Receive Omi transcription
+2. Send to Reka.ai (+ future: video feed)
+3. Get Reka's structured output
+4. Send to ASI:One for intent + agent selection
+5. Execute agent task
+6. Store result in Supermemory (async)
+7. Return response to user (if audio needed, via Reka)
+```
+
+#### Test Criteria:
+- [ ] End-to-end flow completes successfully
+- [ ] Each stage handles errors independently
+- [ ] Async Supermemory storage doesn't block responses
+- [ ] Logs all stages for debugging
+
+#### Files to Create:
+- `src/pipeline/main-orchestrator.js`
+- `src/middleware/error-handler.js`
+- `src/utils/logger.js`
+
+---
+
+### **COMPONENT 6: Fallback & Error Handling**
+**Priority: MEDIUM | Estimated Time: 1-2 hours**
+
+#### Tasks:
+1. Implement fallback when Agentverse agent unavailable
+2. Use Reka.ai native capabilities as backup
+3. Queue unfulfillable requests for logging
+4. Add clarity check for ambiguous intent
+5. Implement retry logic with exponential backoff
+
+#### Test Criteria:
+- [ ] System doesn't crash on agent failure
+- [ ] Provides meaningful response even without agent
+- [ ] Logs gaps for future agent development
+- [ ] Handles network failures gracefully
+
+#### Files to Create:
+- `src/fallbacks/reka-fallback.js`
+- `src/fallbacks/request-queue.js`
+- `src/utils/retry-logic.js`
+
+---
+
+## **Testing Strategy**
+
+### Unit Tests:
+- Each API client independently
+- Parser functions
+- Schema validation
+
+### Integration Tests:
+- Omi → Reka flow
+- Reka → ASI:One flow
+- ASI:One → Supermemory flow
+
+### End-to-End Tests:
+- Full pipeline with mock data
+- Real Omi webhook simulation
+- Error scenario testing
+
+---
+
+## **Environment Variables Needed**
+
+```env
+# Omi Configuration
+OMI_WEBHOOK_SECRET=your_webhook_secret
+
+# Reka.ai
+REKA_API_KEY=your_reka_api_key
+REKA_API_URL=https://api.reka.ai
+
+# ASI:One
+ASI_ONE_API_KEY=your_asi_one_key
+ASI_ONE_API_URL=https://api.asi.one
+
+# Supermemory (via MCP - already configured)
+# No additional env vars needed
+
+# Server
+PORT=3000
+NODE_ENV=development
+```
+
+---
+
+## **Execution Order for Claude Code**
+
+1. **Phase 1 (Foundation):** Component 1 (Omi Receiver) + Component 4 (Supermemory)
+2. **Phase 2 (Processing):** Component 2 (Reka.ai) + Component 3 (ASI:One)
+3. **Phase 3 (Integration):** Component 5 (Main Pipeline)
+4. **Phase 4 (Resilience):** Component 6 (Fallbacks)
+5. **Phase 5 (Testing):** Full integration tests
+
+---
+
+## **Future Enhancements** (Post 12-hour crunch)
+
+- [ ] Add Snap Spectacles video feed to Reka.ai
+- [ ] Build custom Agentverse agents for gaps
+- [ ] Implement audio response routing
+- [ ] Add user preference learning
+- [ ] Optimize latency with edge processing
+- [ ] Agent performance profiling and selection optimization
+
+---
+
+## **Success Metrics**
+
+- ✅ Omi transcription successfully received and processed
+- ✅ Reka.ai provides structured multimodal understanding
+- ✅ ASI:One identifies intent and delegates to agents
+- ✅ Supermemory stores actions for context retrieval
+- ✅ System handles errors without crashing
+- ✅ End-to-end latency < 3 seconds for critical path
+
+**LET'S BUILD THIS BEAST! 🚀**
